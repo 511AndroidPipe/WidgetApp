@@ -1,15 +1,16 @@
 package com.pipeanayap.overlayapp
 
-import android.accessibilityservice.AccessibilityService
+import android.app.Service
 import android.content.Context
-import android.util.Log
-import android.view.accessibility.AccessibilityEvent
-import android.view.WindowManager
-import android.view.View
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.os.IBinder
 import android.provider.Settings
 import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,10 +36,8 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 
-class AccesibilityControlService : AccessibilityService(),
+class AccesibilityControlService : Service(),
     LifecycleOwner,
     SavedStateRegistryOwner {
     private lateinit var windowManager: WindowManager
@@ -49,32 +48,27 @@ class AccesibilityControlService : AccessibilityService(),
     override val savedStateRegistry: SavedStateRegistry = _savedStateRegistryController.savedStateRegistry
     override val lifecycle: Lifecycle = _lifecycleRegistry
 
-    override fun onServiceConnected() {
-        super.onServiceConnected()
-        Log.d("AccesibilityControlService", "Service connected")
+
+    override fun onCreate() {
+        super.onCreate()
+
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         _savedStateRegistryController.performAttach()
         _savedStateRegistryController.performRestore(null)
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        showOverlay()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("AccesibilityControlService", "Service destroyed")
         windowManager.removeView(overlayView)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Handle accessibility events
+    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        showOverlay()
+        return START_NOT_STICKY
     }
-
-    override fun onInterrupt() {
-        // Handle service interruption
-    }
-
     private fun showOverlay() {
-        Log.d("AccesibilityControlService", "Showing overlay")
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         overlayView = ComposeView(this).apply {
@@ -86,7 +80,6 @@ class AccesibilityControlService : AccessibilityService(),
         }
         windowManager.addView(overlayView, getLayoutParams())
     }
-
     private fun getLayoutParams(): WindowManager.LayoutParams {
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -100,6 +93,7 @@ class AccesibilityControlService : AccessibilityService(),
             y = 300
         }
     }
+
 }
 
 @Composable
@@ -132,6 +126,7 @@ fun AccessibilityControls() {
             Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = Color.White)
         }
     }
+
 }
 
 fun sendGesture(context: Context, direction: String) {

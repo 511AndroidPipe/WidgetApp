@@ -63,8 +63,6 @@ dependencies {
     implementation( "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation( "androidx.lifecycle:lifecycle-common-java8:2.8.7")
 
-    // 👇 Esta es la clave para ViewTreeLifecycleOwner
 
-    // Para SavedStateRegistry
     implementation( "androidx.savedstate:savedstate:1.2.1")
 }

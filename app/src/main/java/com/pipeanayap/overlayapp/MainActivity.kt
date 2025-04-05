@@ -1,4 +1,5 @@
 package com.pipeanayap.overlayapp
+
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import android.provider.Settings
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.sp
+import com.pipeanayap.overlayapp.AccesibilityControlService
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Prueba", fontSize = 20.sp)
+                Text("WIDGET", fontSize = 20.sp)
             }
         }
     }
