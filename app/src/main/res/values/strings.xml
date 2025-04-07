@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">OverlayApp</string>
+    <string name="accessibility_service_description">Controlador de gestos por accesibilidad</string>
+
 </resources>

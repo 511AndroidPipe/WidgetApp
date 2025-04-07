@@ -15,11 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -40,37 +36,43 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 class AccesibilityControlService : Service(),
     LifecycleOwner,
     SavedStateRegistryOwner {
+
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: View
 
     private val _lifecycleRegistry = LifecycleRegistry(this)
-    private val _savedStateRegistryController: SavedStateRegistryController = SavedStateRegistryController.create(this)
-    override val savedStateRegistry: SavedStateRegistry = _savedStateRegistryController.savedStateRegistry
+    private val _savedStateRegistryController = SavedStateRegistryController.create(this)
     override val lifecycle: Lifecycle = _lifecycleRegistry
-
+    override val savedStateRegistry: SavedStateRegistry
+        get() = _savedStateRegistryController.savedStateRegistry
 
     override fun onCreate() {
         super.onCreate()
 
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+
         _savedStateRegistryController.performAttach()
         _savedStateRegistryController.performRestore(null)
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        windowManager.removeView(overlayView)
-    }
-
-    override fun onBind(intent: Intent?): IBinder? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         showOverlay()
         return START_NOT_STICKY
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        windowManager.removeView(overlayView)
+        _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
     private fun showOverlay() {
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         _lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+
         overlayView = ComposeView(this).apply {
             setViewTreeLifecycleOwner(this@AccesibilityControlService)
             setViewTreeSavedStateRegistryOwner(this@AccesibilityControlService)
@@ -78,14 +80,16 @@ class AccesibilityControlService : Service(),
                 AccessibilityControls()
             }
         }
+
         windowManager.addView(overlayView, getLayoutParams())
     }
+
     private fun getLayoutParams(): WindowManager.LayoutParams {
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -93,7 +97,6 @@ class AccesibilityControlService : Service(),
             y = 300
         }
     }
-
 }
 
 @Composable
@@ -126,7 +129,6 @@ fun AccessibilityControls() {
             Icon(Icons.Default.Settings, contentDescription = "Ajustes", tint = Color.White)
         }
     }
-
 }
 
 fun sendGesture(context: Context, direction: String) {
