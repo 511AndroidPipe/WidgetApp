@@ -52,8 +52,12 @@ class MyAccessibilityService : AccessibilityService() {
         val height = displayMetrics.heightPixels
 
         val path = Path()
-        val startX = (width / 2).toFloat() // Centro de la pantalla
-        val startY = (height / 2).toFloat() // Centro de la pantalla
+        val startX = (width / 2).toFloat()
+        val startY = (height / 2).toFloat()
+        val maxOffset = (width * 0.3).toFloat() // Máximo 30% del ancho de la pantalla
+
+        Log.d("performGesture", "Screen width: $width, height: $height")
+        Log.d("performGesture", "Starting point: ($startX, $startY)")
 
         when (direction) {
             "UP" -> {
@@ -65,28 +69,49 @@ class MyAccessibilityService : AccessibilityService() {
                 path.lineTo(startX, startY + 400f)
             }
             "LEFT" -> {
-                path.moveTo(startX + 500f, startY)
-                path.lineTo(startX - 500f, startY)
+                path.moveTo(startX + maxOffset, startY)
+                path.lineTo(startX - maxOffset, startY)
             }
             "RIGHT" -> {
-                path.moveTo(startX - 500f, startY)
-                path.lineTo(startX + 500f, startY)
+                path.moveTo(startX - maxOffset, startY)
+                path.lineTo(startX + maxOffset, startY)
+            }
+            else -> {
+                Log.e("performGesture", "Invalid direction: $direction")
+                return
             }
         }
 
-        // Crear el gesto
-        val gesture = GestureDescription.Builder()
-            .addStroke(
-                GestureDescription.StrokeDescription(
-                    path,
-                    0L,
-                    600L // Duración del gesto
+        try {
+            val gesture = GestureDescription.Builder()
+                .addStroke(
+                    GestureDescription.StrokeDescription(
+                        path,
+                        0L,
+                        800L // Duración incrementada
+                    )
                 )
-            )
-            .build()
+                .build()
 
-        // Ejecutar el gesto
-        dispatchGesture(gesture, null, null)
+            Log.d("performGesture", "Dispatching gesture for direction: $direction")
+            val result = dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    super.onCompleted(gestureDescription)
+                    Log.d("performGesture", "Gesture completed: $direction")
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    super.onCancelled(gestureDescription)
+                    Log.e("performGesture", "Gesture cancelled: $direction. Check system constraints or path validity.")
+                }
+            }, null)
+
+            if (!result) {
+                Log.e("performGesture", "Failed to dispatch gesture: $direction")
+            }
+        } catch (e: Exception) {
+            Log.e("performGesture", "Error dispatching gesture: ${e.message}", e)
+        }
     }
 
     // Método para verificar si el servicio de accesibilidad está habilitado
