@@ -3,6 +3,7 @@ package com.pipeanayap.overlayapp
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.IBinder
 import android.provider.Settings
@@ -19,9 +20,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -102,6 +108,7 @@ class AccesibilityControlService : Service(),
 @Composable
 fun AccessibilityControls() {
     val context = LocalContext.current
+    var isPortrait by remember { mutableStateOf(true) } // State to track orientation
 
     Column(
         modifier = Modifier
@@ -109,18 +116,30 @@ fun AccessibilityControls() {
             .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        IconButton(onClick = { sendGesture(context, "UP") }) {
-            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Arriba", tint = Color.White)
+        if (isPortrait) {
+            // Show vertical controls in portrait mode
+            IconButton(onClick = { sendGesture(context, "UP") }) {
+                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Arriba", tint = Color.White)
+            }
+            IconButton(onClick = { sendGesture(context, "DOWN") }) {
+                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Abajo", tint = Color.White)
+            }
+        } else {
+            // Show horizontal controls in landscape mode
+            IconButton(onClick = { sendGesture(context, "LEFT") }) {
+                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Izquierda", tint = Color.White)
+            }
+            IconButton(onClick = { sendGesture(context, "RIGHT") }) {
+                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Derecha", tint = Color.White)
+            }
         }
-        IconButton(onClick = { sendGesture(context, "DOWN") }) {
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Abajo", tint = Color.White)
+
+        // Button to toggle orientation
+        IconButton(onClick = { isPortrait = !isPortrait }) {
+            Icon(Icons.Default.Refresh, contentDescription = "Cambiar orientación", tint = Color.White)
         }
-        IconButton(onClick = { sendGesture(context, "LEFT") }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Izquierda", tint = Color.White)
-        }
-        IconButton(onClick = { sendGesture(context, "RIGHT") }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Derecha", tint = Color.White)
-        }
+
+        // Settings button (always visible)
         IconButton(onClick = {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
